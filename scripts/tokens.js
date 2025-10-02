@@ -1,4 +1,14 @@
 const { ethers } = require("hardhat");
+require("dotenv").config();
+const { Wallet } = require("ethers");
+
+// usa PRIVATE_KEY si existe; sino cae al signer #0 de Hardhat
+async function getMe() {
+  const pk = process.env.PRIVATE_KEY; // 0x...
+  if (pk) return new Wallet(pk, ethers.provider);
+  const [me] = await ethers.getSigners();
+  return me;
+}
 
 const ERC20_ABI = [
   "function name() view returns (string)",
@@ -13,7 +23,7 @@ const USDCe = "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1";
 async function main() {
   const wars  = new ethers.Contract(WARS,  ERC20_ABI, ethers.provider);
   const usdce = new ethers.Contract(USDCe, ERC20_ABI, ethers.provider);
-  const [me]  = await ethers.getSigners();
+  const me = await getMe();
 
   const [nW, sW, dW] = await Promise.all([wars.name(), wars.symbol(), wars.decimals()]);
   const [nU, sU, dU] = await Promise.all([usdce.name(), usdce.symbol(), usdce.decimals()]);

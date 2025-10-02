@@ -1,4 +1,14 @@
 const { ethers, network } = require("hardhat");
+require("dotenv").config();
+const { Wallet } = require("ethers");
+
+// usa PRIVATE_KEY si existe; sino cae al signer #0 de Hardhat
+async function getMe() {
+  const pk = process.env.PRIVATE_KEY; // 0x...
+  if (pk) return new Wallet(pk, ethers.provider);
+  const [me] = await ethers.getSigners();
+  return me;
+}
 
 const WARS = "0x0DC4F92879B7670e5f4e4e6e3c801D229129D90D";
 const ERC20_ABI = [
@@ -43,7 +53,7 @@ async function findRichHolder(token) {
 }
 
 async function main() {
-  const [me] = await ethers.getSigners();
+  const me = await getMe();
   const warsReader = new ethers.Contract(WARS, ERC20_ABI, ethers.provider);
 
   const bnBefore = await ethers.provider.getBlockNumber();
@@ -62,7 +72,7 @@ async function main() {
   const whale = await ethers.getSigner(holder);
   const warsWhale = new ethers.Contract(WARS, ERC20_ABI, whale);
 
-  const amount = ethers.parseUnits("1", 18); // 1 WARS para test
+  const amount = ethers.parseUnits(process.env.AMOUNT_WARS ?? "10000", 18); // 10,000 WARS por defecto
   const tx = await warsWhale.transfer(me.address, amount);
   const rc = await tx.wait();
   console.log("tx:", rc.hash);

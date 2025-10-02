@@ -1,4 +1,14 @@
 const { ethers, network } = require("hardhat");
+require("dotenv").config();
+const { Wallet } = require("ethers");
+
+// usa PRIVATE_KEY si existe; sino cae al signer #0 de Hardhat
+async function getMe() {
+    const pk = process.env.PRIVATE_KEY; // 0x...
+    if (pk) return new Wallet(pk, ethers.provider);
+    const [me] = await ethers.getSigners();
+    return me;
+  }
 
 const USDCe = "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1";
 const ERC20_ABI = [
@@ -55,7 +65,7 @@ async function findRichHolderChunked(token, min = MIN_BAL) {
 }
 
 async function main() {
-  const [me] = await ethers.getSigners();
+  const me = await getMe();
   const usdceReader = new ethers.Contract(USDCe, ERC20_ABI, ethers.provider);
 
   const before = await usdceReader.balanceOf(me.address);
